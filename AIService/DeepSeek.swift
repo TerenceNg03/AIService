@@ -24,20 +24,20 @@ struct Message: Codable {
 }
 
 
-func callDeepSeekAPI(s: String) async -> Either<String, String>{
+func callDeepSeekAPI(apiKey:String, s: String) async -> Either<String, String>{
 
     let url = URL(string: "https://api.deepseek.com/chat/completions")!
     var request = URLRequest(url: url)
 
     request.httpMethod = "POST"
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.addValue("Bearer <DeepSeek API Key>", forHTTPHeaderField: "Authorization")
+    request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
 
     let body: [String: Any] = [
         "model": "deepseek-chat",
         "messages": [
             ["role": "system", "content": "You are a helpful assistant."],
-            ["role": "user", "content": "Hello!"]
+            ["role": "user", "content": s]
         ],
         "stream": false
     ]
