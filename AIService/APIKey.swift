@@ -15,7 +15,7 @@ func saveAPIKey(key: String) -> Bool {
     // Create query for adding to keychain
     let query: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
-        kSecAttrService as String: "AI Service",
+        kSecAttrService as String: "AIService",
         kSecAttrAccount as String: NSFullUserName(),
         kSecValueData as String: key
     ]
@@ -33,7 +33,7 @@ func getAPIKey() -> String? {
     // Create query to search for the keychain item
     let query: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
-        kSecAttrService as String: "AI Service",
+        kSecAttrService as String: "AIService",
         kSecAttrAccount as String: NSFullUserName(),
         kSecReturnData as String: true,
         kSecMatchLimit as String: kSecMatchLimitOne
@@ -57,7 +57,7 @@ func getAPIKey() -> String? {
 func deleteAPIKey() -> Bool{
     let query: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
-        kSecAttrService as String: "AI Service",
+        kSecAttrService as String: "AIService",
         kSecAttrAccount as String: NSFullUserName()
     ]
 

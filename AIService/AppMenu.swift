@@ -6,16 +6,24 @@
 //
 
 
-import SwiftUICore
 import SwiftUI
 
 struct AppMenu: View {
     @ObservedObject var state : AppState
-    @State var input = "Ask DeepSeek anything!"
+    
+    @State var askInput = "Ask DeepSeek anything!"
+    @State var refineInput = "Original Text"
     @State var apiKey : String? = getAPIKey()
     @State var keyIn = ""
 
     var quit : () -> ();
+    func menuStyle(v: () -> some View) -> some View {
+        return HStack {
+            v().buttonStyle(.borderless)
+                .padding([.leading, .trailing])
+            Spacer()
+        }
+    }
     func syncAPIKey(){
         apiKey = getAPIKey()
         switch apiKey {
@@ -41,6 +49,9 @@ struct AppMenu: View {
 
     var body: some View {
         let quitButton = Button(action: quit, label: { Text("Quit") })
+        let homeButton = Button {() -> () in
+            state.update(state: .Init)
+        } label: {Image(systemName: "bubble.and.pencil")}
 
         switch (apiKey, state.state) {
         case (_, .Error(let s)):
@@ -56,6 +67,49 @@ struct AppMenu: View {
                 quitButton
             }
             Spacer()
+        case (_, .Init):
+            VStack{
+                Spacer()
+                menuStyle{
+                    Text("API Key")
+                        .foregroundStyle(.black.opacity(0.5))
+                        .bold()
+                        .font(.footnote)
+                }
+                Spacer()
+                menuStyle {
+                    Button(
+                        role: .destructive,
+                        action: {() -> () in
+                            if deleteAPIKey() {
+                                syncAPIKey()
+                                state.update(state: .Init)
+                            }else{
+                                syncAPIKey()
+                                state.update(state: .Error("Failed to delete API Key from keychain"))
+                            }
+                        }, label: {Text("Delete API Key").foregroundStyle(.red)})
+                }
+                Divider()
+                menuStyle{
+                    Text("Function")
+                        .foregroundStyle(.black.opacity(0.5))
+                        .font(.footnote)
+                        .bold()
+                }
+                Spacer()
+                menuStyle {
+                    Button(action: {() -> () in state.update(state: .Ask)},label: {Text("Ask AI")})
+                }
+                menuStyle {
+                    Button(action: {() -> () in state.update(state: .Refine)},label: {Text("Refine Text")})
+                }
+                Divider()
+                menuStyle {
+                    quitButton
+                }
+                Spacer()
+            }
         case (.none, _):
             Spacer()
             HStack{
@@ -76,35 +130,52 @@ struct AppMenu: View {
                 }, label: { Text("Enter") })
             }
             Spacer()
-        case (.some(let key), .Init):
+        case (.some(let key), .Ask):
             Spacer()
-            textArea(b: $input)
-            Button(action: {() -> () in
-                state.update(state: .Busy)
-                DispatchQueue.main.async{
-                    Task {
-                        let res = await callDeepSeekAPI(apiKey: key,s: input)
-                        switch res {
-                        case .right(let l):
-                            state.update(state: .Error(l))
-                        case .left(let r):
-                            state.update(state: .Result(input, r))
-                        }
-                    }
-                }
-            }, label: {Text("Ask DeepSeek")})
+            Text("Ask DeepSeek:")
+            textArea(b: $askInput)
             Divider()
             HStack{
+                homeButton
                 Button(action: {() -> () in
-                    if deleteAPIKey() {
-                        syncAPIKey()
-                        state.update(state: .Init)
-                    }else{
-                        syncAPIKey()
-                        state.update(state: .Error("Failed to delete API Key from keychain"))
+                    state.update(state: .Busy)
+                    DispatchQueue.main.async{
+                        Task {
+                            let res = await callDeepSeekAPI(apiKey: key,s: askInput)
+                            switch res {
+                            case .right(let l):
+                                state.update(state: .Error(l))
+                            case .left(let r):
+                                state.update(state: .Result(askInput, r))
+                            }
+                        }
                     }
-                }, label: {Text("Delete API Key")})
-                quitButton
+                }, label: {Text("Send")})
+            }
+            Spacer()
+        case (.some(let key), .Refine):
+            Spacer()
+            Text("Text to refine")
+            textArea(b: $refineInput)
+            Divider()
+            HStack{
+                homeButton
+                Button(action: {() -> () in
+                    state.update(state: .Busy)
+                    DispatchQueue.main.async{
+                        Task {
+                            let res = await callDeepSeekAPI(
+                                apiKey: key,
+                                s: "Refine the following text and return only the result. " + refineInput)
+                            switch res {
+                            case .right(let l):
+                                state.update(state: .Error(l))
+                            case .left(let r):
+                                state.update(state: .Result(refineInput, r))
+                            }
+                        }
+                    }
+                }, label: {Text("Send")})
             }
             Spacer()
         case (_, .Busy):
@@ -117,7 +188,7 @@ struct AppMenu: View {
             }
             Divider()
             HStack{
-                quitButton
+                homeButton
                 Button(action: {() -> () in state.update(state: .Init)}, label: { Text("Ok") })
             }
             Spacer()
@@ -125,7 +196,7 @@ struct AppMenu: View {
             Spacer()
             HStack {
                 Image(systemName: "checkmark.circle")
-                Text("Quetion posted:")
+                Text("Input")
             }
             textArea(b: .constant(query))
             HStack {
@@ -135,7 +206,7 @@ struct AppMenu: View {
             textArea(b: .constant(answer))
             Divider()
             HStack{
-                quitButton
+                homeButton
                 Button(action: {() -> () in state.update(state: .Init)}, label: { Text("Ok") })
             }
             Spacer()

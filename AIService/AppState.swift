@@ -8,18 +8,24 @@
 
 import SwiftUI
 
+enum AppStateD {
+    case Init
+    case Ask
+    case Refine
+    case Busy
+    case Result(String, String)
+    case Error(String)
+}
+
+@MainActor
 class AppState: ObservableObject {
-    enum AppState {
-        case Init
-        case Busy
-        case Result(String, String)
-        case Error(String)
-    }
 
+    @Published var state: AppStateD = .Init;
 
-    @Published var state: AppState = .Init;
-
-    func update(state: AppState) {
-        self.state = state
+    func update(state: AppStateD) {
+        DispatchQueue.main.async{
+            self.state = state
+        }
     }
 }
+

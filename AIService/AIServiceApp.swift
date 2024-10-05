@@ -17,14 +17,14 @@ struct AIServiceApp: App {
 
     func icon(state: AppState) -> String {
         switch state.state {
-        case .Init:
-            "bubble.and.pencil"
         case .Busy:
             "ellipsis.bubble"
         case .Error(_):
             "exclamationmark.bubble"
-        case.Result(_, _):
+        case .Result(_, _):
             "checkmark.bubble"
+        case _:
+            "bubble.and.pencil"
         }
     }
 
