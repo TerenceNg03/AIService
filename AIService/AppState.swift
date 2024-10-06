@@ -12,7 +12,7 @@ enum AppStateD {
     case Init
     case Ask
     case Refine
-    case Busy
+    case Busy(String, String)
     case Result(String, String)
     case Error(String)
 }

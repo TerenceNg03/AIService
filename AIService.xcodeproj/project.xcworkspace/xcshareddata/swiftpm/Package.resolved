@@ -1,0 +1,24 @@
+{
+  "originHash" : "f6ef9d1e897baeb845489180cafc251709cb744d9ee072b0f00e52dcdc581e6c",
+  "pins" : [
+    {
+      "identity" : "eventsource",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Recouse/EventSource",
+      "state" : {
+        "revision" : "7db041ff31042bb3f1a8c3d045e57e17bb79bff5",
+        "version" : "0.0.8"
+      }
+    },
+    {
+      "identity" : "swift-atomics",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-atomics.git",
+      "state" : {
+        "revision" : "cd142fd2f64be2100422d658e7411e39489da985",
+        "version" : "1.2.0"
+      }
+    }
+  ],
+  "version" : 3
+}

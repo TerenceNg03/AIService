@@ -15,17 +15,7 @@ struct AIIntent: AppIntent {
     var prompt: String
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        let apiKey = getAPIKey()
-        guard let apiKey = apiKey else {
-            return .result(value: "", dialog: "API key has not been setup!")
-        }
-        let result = await callDeepSeekAPI(apiKey: apiKey, s: prompt)
-        switch result {
-        case .left(let l):
-            return .result(value: l, dialog: "\(l)")
-        case .right(let r):
-            return .result(value: "", dialog: "\(r)")
-        }
+            return .result(value: "", dialog: "Unsupported for now.")
     }
 }
 

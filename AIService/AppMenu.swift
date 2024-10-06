@@ -7,12 +7,15 @@
 
 
 import SwiftUI
+import Atomics
 
 struct AppMenu: View {
     @ObservedObject var state : AppState
-    
+
     @State var askInput = "Ask DeepSeek anything!"
+    @State var currentTask : ManagedAtomic<Bool>? = nil
     @State var refineInput = "Original Text"
+    @State var output = ""
     @State var apiKey : String? = getAPIKey()
     @State var keyIn = ""
 
@@ -47,14 +50,17 @@ struct AppMenu: View {
             .fixedSize(horizontal: false, vertical: true)
     }
 
-    var body: some View {
-        let quitButton = Button(action: quit, label: { Text("Quit") })
-        let homeButton = Button {() -> () in
+    func quitButton() -> some View {
+        Button(action: quit, label: { Text("Quit") })}
+
+    func homeButton() -> some View {
+        Button {() -> () in
             state.update(state: .Init)
         } label: {Image(systemName: "bubble.and.pencil")}
+    }
 
-        switch (apiKey, state.state) {
-        case (_, .Error(let s)):
+    func errorPage(s: String) -> some View{
+        VStack{
             Spacer()
             HStack{
                 Image(systemName: "exclamationmark.triangle.fill")
@@ -62,55 +68,58 @@ struct AppMenu: View {
             }
             textArea(b: .constant(s))
             Divider()
-            HStack{
-                Button(action: {() -> () in state.update(state: .Init)}, label: {Text("Ok")})
-                quitButton
+            homeButton()
+            Spacer()
+        }
+    }
+
+    func initPage() -> some View{
+        VStack{
+            Spacer()
+            menuStyle{
+                Text("API Key")
+                    .foregroundStyle(.black.opacity(0.5))
+                    .bold()
+                    .font(.footnote)
             }
             Spacer()
-        case (_, .Init):
-            VStack{
-                Spacer()
-                menuStyle{
-                    Text("API Key")
-                        .foregroundStyle(.black.opacity(0.5))
-                        .bold()
-                        .font(.footnote)
-                }
-                Spacer()
-                menuStyle {
-                    Button(
-                        role: .destructive,
-                        action: {() -> () in
-                            if deleteAPIKey() {
-                                syncAPIKey()
-                                state.update(state: .Init)
-                            }else{
-                                syncAPIKey()
-                                state.update(state: .Error("Failed to delete API Key from keychain"))
-                            }
-                        }, label: {Text("Delete API Key").foregroundStyle(.red)})
-                }
-                Divider()
-                menuStyle{
-                    Text("Function")
-                        .foregroundStyle(.black.opacity(0.5))
-                        .font(.footnote)
-                        .bold()
-                }
-                Spacer()
-                menuStyle {
-                    Button(action: {() -> () in state.update(state: .Ask)},label: {Text("Ask AI")})
-                }
-                menuStyle {
-                    Button(action: {() -> () in state.update(state: .Refine)},label: {Text("Refine Text")})
-                }
-                Divider()
-                menuStyle {
-                    quitButton
-                }
-                Spacer()
+            menuStyle {
+                Button(
+                    role: .destructive,
+                    action: {() -> () in
+                        if deleteAPIKey() {
+                            syncAPIKey()
+                            state.update(state: .Init)
+                        }else{
+                            syncAPIKey()
+                            state.update(state: .Error("Failed to delete API Key from keychain"))
+                        }
+                    }, label: {Text("Delete API Key").foregroundStyle(.red)})
             }
-        case (.none, _):
+            Divider()
+            menuStyle{
+                Text("Function")
+                    .foregroundStyle(.black.opacity(0.5))
+                    .font(.footnote)
+                    .bold()
+            }
+            Spacer()
+            menuStyle {
+                Button(action: {() -> () in state.update(state: .Ask)},label: {Text("Ask AI")})
+            }
+            menuStyle {
+                Button(action: {() -> () in state.update(state: .Refine)},label: {Text("Refine Text")})
+            }
+            Divider()
+            menuStyle {
+                quitButton()
+            }
+            Spacer()
+        }
+    }
+
+    func readAPIKeyPage() -> some View {
+        VStack{
             Spacer()
             HStack{
                 Image(systemName: "exclamationmark.triangle.fill")
@@ -118,7 +127,7 @@ struct AppMenu: View {
             }
             textArea(b: $keyIn)
             HStack{
-                quitButton
+                quitButton()
                 Button(action: {() -> () in
                     if saveAPIKey(key: keyIn) {
                         syncAPIKey()
@@ -130,69 +139,86 @@ struct AppMenu: View {
                 }, label: { Text("Enter") })
             }
             Spacer()
-        case (.some(let key), .Ask):
+        }
+    }
+
+    func askPage(key: String) -> some View {
+        VStack{
             Spacer()
             Text("Ask DeepSeek:")
             textArea(b: $askInput)
             Divider()
             HStack{
-                homeButton
+                homeButton()
                 Button(action: {() -> () in
-                    state.update(state: .Busy)
+                    let signal = ManagedAtomic(false)
+                    currentTask = signal
                     DispatchQueue.main.async{
                         Task {
-                            let res = await callDeepSeekAPI(apiKey: key,s: askInput)
-                            switch res {
-                            case .right(let l):
-                                state.update(state: .Error(l))
-                            case .left(let r):
-                                state.update(state: .Result(askInput, r))
-                            }
+                            await DeepSeekAPIHandler(state: state, stop: signal)
+                                .callDeepSeekAPI(apiKey: key, s: askInput, displayInput: askInput)
                         }
                     }
                 }, label: {Text("Send")})
             }
             Spacer()
-        case (.some(let key), .Refine):
+        }
+    }
+
+    func refinePage(key: String) -> some View {
+        VStack{
             Spacer()
             Text("Text to refine")
             textArea(b: $refineInput)
             Divider()
             HStack{
-                homeButton
+                homeButton()
                 Button(action: {() -> () in
-                    state.update(state: .Busy)
                     DispatchQueue.main.async{
                         Task {
-                            let res = await callDeepSeekAPI(
-                                apiKey: key,
-                                s: "Refine the following text and return only the result. " + refineInput)
-                            switch res {
-                            case .right(let l):
-                                state.update(state: .Error(l))
-                            case .left(let r):
-                                state.update(state: .Result(refineInput, r))
-                            }
+                            let signal = ManagedAtomic(false)
+                            currentTask = signal
+                            await DeepSeekAPIHandler(state: state, stop: signal)
+                                .callDeepSeekAPI(apiKey: key, s: "Refine the following text and return only the result. " + refineInput, displayInput: refineInput)
                         }
                     }
                 }, label: {Text("Send")})
             }
             Spacer()
-        case (_, .Busy):
+        }
+    }
+
+    func busyPage(query:String, answer: String) -> some View {
+        VStack {
             Spacer()
+            HStack {
+                Image(systemName: "checkmark.circle")
+                Text("Input")
+            }
+            textArea(b: .constant(query))
             HStack {
                 Image(systemName: "circle.fill")
                     .symbolEffect(.bounce, options:.repeating)
                     .font(.footnote)
-                Text("Waiting for Answer")
+                Text("Answer from AI:")
             }
+            textArea(b: .constant(answer))
             Divider()
-            HStack{
-                homeButton
-                Button(action: {() -> () in state.update(state: .Init)}, label: { Text("Ok") })
+            Button{
+                if var signal = currentTask {
+                    signal.store(true, ordering: .relaxed)
+                } else {
+                    state.update(state: .Init)
+                }
+            } label: {
+                Image(systemName: "stop.circle")
             }
             Spacer()
-        case (_, .Result(let query, let answer)):
+        }
+    }
+
+    func resultPage(query:String, answer: String) -> some View {
+        VStack {
             Spacer()
             HStack {
                 Image(systemName: "checkmark.circle")
@@ -205,11 +231,27 @@ struct AppMenu: View {
             }
             textArea(b: .constant(answer))
             Divider()
-            HStack{
-                homeButton
-                Button(action: {() -> () in state.update(state: .Init)}, label: { Text("Ok") })
-            }
+            homeButton()
             Spacer()
+        }
+    }
+
+    var body: some View {
+        switch (apiKey, state.state) {
+        case (_, .Error(let s)):
+            errorPage(s: s)
+        case (_, .Init):
+            initPage()
+        case (.none, _):
+            readAPIKeyPage()
+        case (.some(let key), .Ask):
+            askPage(key: key)
+        case (.some(let key), .Refine):
+            refinePage(key: key)
+        case (_, .Busy(let query, let answer)):
+            busyPage(query: query, answer: answer)
+        case (_, .Result(let query, let answer)):
+            resultPage(query: query, answer: answer)
         }
     }
 }
