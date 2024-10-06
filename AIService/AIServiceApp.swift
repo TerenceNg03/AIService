@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-import SwiftUI
-
 @main
 struct AIServiceApp: App {
     @StateObject var state = AppState()
@@ -48,6 +46,6 @@ struct AIServiceApp: App {
                         dismissWindow(id: "key")
                     }
                 }
-        }
+        }.windowLevel(.floating)
     }
 }
