@@ -210,14 +210,14 @@ struct AppMenu: View {
             Spacer()
             HStack {
                 Image(systemName: "checkmark.circle")
-                Text("Input")
+                Text("Input posted")
             }
             textArea(b: .constant(query))
             HStack {
                 Image(systemName: "circle.fill")
                     .symbolEffect(.bounce, options:.repeating)
                     .font(.footnote)
-                Text("Answer from AI:")
+                Text("Answer generating")
             }
             textArea(b: .constant(answer))
             Divider()
@@ -239,12 +239,12 @@ struct AppMenu: View {
             Spacer()
             HStack {
                 Image(systemName: "checkmark.circle")
-                Text("Input")
+                Text("Input posted")
             }
             textArea(b: .constant(query))
             HStack {
                 Image(systemName: "checkmark.circle")
-                Text("Answer from AI:")
+                Text("Answer generated")
             }
             textArea(b: .constant(answer))
             Divider()
@@ -264,22 +264,24 @@ struct AppMenu: View {
             return
         }
 
-        guard let action = components.host, action == "ask" else {
-            askInput = query
-            if let key = getAPIKey() {
-                ask(key: key)
-            } else {
-            }
-            return
-        }
-
-        guard let action = components.host, action == "refine" else {
+        switch components.host {
+        case .some("refine"):
             refineInput = query
             if let key = getAPIKey() {
                 refine(key: key)
             } else {
             }
             return
+        case .some("ask"):
+            askInput = query
+            if let key = getAPIKey() {
+                ask(key: key)
+            } else {
+            }
+            return
+        case _:
+            ()
+
         }
     }
 
