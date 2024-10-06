@@ -11,6 +11,7 @@ import Atomics
 
 struct AppMenu: View {
     @ObservedObject var state : AppState
+    @ObservedObject var urlState : URLState
 
     @State var askInput = "Ask DeepSeek anything!"
     @State var currentTask : ManagedAtomic<Bool>? = nil
@@ -142,6 +143,36 @@ struct AppMenu: View {
         }
     }
 
+    func ask(key: String) {
+        let signal = ManagedAtomic(false)
+        if let task = currentTask {
+            task.store(true, ordering: .relaxed)
+        }
+        currentTask = signal
+        DispatchQueue.main.async{
+            Task {
+                state.update(state: .Busy(askInput, ""))
+                await DeepSeekAPIHandler(state: state, stop: signal)
+                    .callDeepSeekAPI(apiKey: key, s: askInput, displayInput: askInput)
+            }
+        }
+    }
+
+    func refine(key: String){
+        state.update(state: .Busy(refineInput, ""))
+        DispatchQueue.main.async{
+            Task {
+                let signal = ManagedAtomic(false)
+                if let task = currentTask {
+                    task.store(true, ordering: .relaxed)
+                }
+                currentTask = signal
+                await DeepSeekAPIHandler(state: state, stop: signal)
+                    .callDeepSeekAPI(apiKey: key, s: "Refine the following text and return only the result. " + refineInput, displayInput: refineInput)
+            }
+        }
+    }
+
     func askPage(key: String) -> some View {
         VStack{
             Spacer()
@@ -151,14 +182,7 @@ struct AppMenu: View {
             HStack{
                 homeButton()
                 Button(action: {() -> () in
-                    let signal = ManagedAtomic(false)
-                    currentTask = signal
-                    DispatchQueue.main.async{
-                        Task {
-                            await DeepSeekAPIHandler(state: state, stop: signal)
-                                .callDeepSeekAPI(apiKey: key, s: askInput, displayInput: askInput)
-                        }
-                    }
+                    ask(key: key)
                 }, label: {Text("Send")})
             }
             Spacer()
@@ -174,14 +198,7 @@ struct AppMenu: View {
             HStack{
                 homeButton()
                 Button(action: {() -> () in
-                    DispatchQueue.main.async{
-                        Task {
-                            let signal = ManagedAtomic(false)
-                            currentTask = signal
-                            await DeepSeekAPIHandler(state: state, stop: signal)
-                                .callDeepSeekAPI(apiKey: key, s: "Refine the following text and return only the result. " + refineInput, displayInput: refineInput)
-                        }
-                    }
+                    refine(key: key)
                 }, label: {Text("Send")})
             }
             Spacer()
@@ -205,7 +222,7 @@ struct AppMenu: View {
             textArea(b: .constant(answer))
             Divider()
             Button{
-                if var signal = currentTask {
+                if let signal = currentTask {
                     signal.store(true, ordering: .relaxed)
                 } else {
                     state.update(state: .Init)
@@ -236,22 +253,62 @@ struct AppMenu: View {
         }
     }
 
+    func handleURL(url: URL){
+        guard url.scheme == "aiservice" else {
+            return
+        }
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
+            return
+        }
+        guard let query = components.queryItems?.first(where: { $0.name == "q" })?.value else {
+            return
+        }
+
+        guard let action = components.host, action == "ask" else {
+            askInput = query
+            if let key = getAPIKey() {
+                ask(key: key)
+            } else {
+            }
+            return
+        }
+
+        guard let action = components.host, action == "refine" else {
+            refineInput = query
+            if let key = getAPIKey() {
+                refine(key: key)
+            } else {
+            }
+            return
+        }
+    }
+
     var body: some View {
-        switch (apiKey, state.state) {
-        case (_, .Error(let s)):
-            errorPage(s: s)
-        case (_, .Init):
-            initPage()
-        case (.none, _):
-            readAPIKeyPage()
-        case (.some(let key), .Ask):
-            askPage(key: key)
-        case (.some(let key), .Refine):
-            refinePage(key: key)
-        case (_, .Busy(let query, let answer)):
-            busyPage(query: query, answer: answer)
-        case (_, .Result(let query, let answer)):
-            resultPage(query: query, answer: answer)
+        VStack{
+            if let url = urlState.url {
+                let _ = DispatchQueue.main.async {
+                    urlState.update(url: nil)
+                    handleURL(url: url)
+                }
+                Text("Received deeplink")
+            } else {
+                switch (apiKey, state.state) {
+                case (_, .Error(let s)):
+                    errorPage(s: s)
+                case (_, .Init):
+                    initPage()
+                case (.none, _):
+                    readAPIKeyPage()
+                case (.some(let key), .Ask):
+                    askPage(key: key)
+                case (.some(let key), .Refine):
+                    refinePage(key: key)
+                case (_, .Busy(let query, let answer)):
+                    busyPage(query: query, answer: answer)
+                case (_, .Result(let query, let answer)):
+                    resultPage(query: query, answer: answer)
+                }
+            }
         }
     }
 }

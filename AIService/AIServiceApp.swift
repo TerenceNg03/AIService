@@ -7,9 +7,13 @@
 
 import SwiftUI
 
+import SwiftUI
+
 @main
 struct AIServiceApp: App {
     @StateObject var state = AppState()
+    @StateObject var urlState = URLState()
+    @Environment(\.dismissWindow) private var dismissWindow
 
     func quit() {
         NSApplication.shared.terminate(self)
@@ -33,7 +37,17 @@ struct AIServiceApp: App {
             "AIService",
             systemImage: icon(state: state))
         {
-            AppMenu(state: state, quit: quit)
+            AppMenu(state: state, urlState: urlState, quit: quit)
         }.menuBarExtraStyle(.window)
+
+        Window("key", id: "key") {
+            EmptyView()
+                .onOpenURL{ url in
+                    urlState.update(url: url)
+                    DispatchQueue.main.async {
+                        dismissWindow(id: "key")
+                    }
+                }
+        }
     }
 }

@@ -29,3 +29,14 @@ class AppState: ObservableObject {
     }
 }
 
+@MainActor
+class URLState: ObservableObject {
+
+    @Published var url : URL? = nil;
+
+    func update(url: URL?) {
+        DispatchQueue.main.async{
+            self.url = url
+        }
+    }
+}
