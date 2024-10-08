@@ -7,7 +7,6 @@
 
 
 import SwiftUI
-import MarkdownUI
 import Atomics
 
 struct ContentView: View {
