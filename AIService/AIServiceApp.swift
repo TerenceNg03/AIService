@@ -35,7 +35,7 @@ struct AIServiceApp: App {
             "AIService",
             systemImage: icon(state: state))
         {
-            AppMenu(state: state, urlState: urlState, quit: quit)
+            ContentView(state: state, urlState: urlState, quit: quit)
         }.menuBarExtraStyle(.window)
 
         Window("key", id: "key") {

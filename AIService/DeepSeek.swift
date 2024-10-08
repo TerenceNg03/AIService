@@ -26,7 +26,7 @@ struct Delta: Codable {
     let content: String
 }
 
-struct DeepSeekAPIHandler {
+struct APICall {
     @ObservedObject var state : AppState
     var stop : ManagedAtomic<Bool>
 
@@ -55,7 +55,7 @@ struct DeepSeekAPIHandler {
         }
     }
 
-    func callDeepSeekAPI(apiKey:String, s: String, displayInput: String) async {
+    func callAPI(apiKey:String, s: String, displayInput: String) async {
         let eventSource = EventSource()
         guard let request = toRequest(apiKey: apiKey, s: s)else {
             return

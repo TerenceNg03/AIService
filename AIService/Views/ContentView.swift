@@ -7,9 +7,10 @@
 
 
 import SwiftUI
+import MarkdownUI
 import Atomics
 
-struct AppMenu: View {
+struct ContentView: View {
     @ObservedObject var state : AppState
     @ObservedObject var urlState : URLState
 
@@ -21,13 +22,7 @@ struct AppMenu: View {
     @State var keyIn = ""
 
     var quit : () -> ();
-    func menuStyle(v: () -> some View) -> some View {
-        return HStack {
-            v().buttonStyle(.borderless)
-                .padding([.leading, .trailing])
-            Spacer()
-        }
-    }
+
     func syncAPIKey(){
         apiKey = getAPIKey()
         switch apiKey {
@@ -37,10 +32,10 @@ struct AppMenu: View {
             ()
         }
     }
-    func textArea(b: Binding<String>) -> some View{
+    func textArea(_ b: Binding<String>) -> some View{
         TextEditor(text: b)
-            .frame(maxHeight: 400)
             .font(.title3)
+            .frame(maxHeight: 400)
             .padding(5)
             .cornerRadius(4)
             .overlay(
@@ -51,8 +46,15 @@ struct AppMenu: View {
             .fixedSize(horizontal: false, vertical: true)
     }
 
-    func quitButton() -> some View {
-        Button(action: quit, label: { Text("Quit") })}
+    func deleteAPIKeyAction(){
+        if deleteAPIKey() {
+            syncAPIKey()
+            state.update(state: .Init)
+        }else{
+            syncAPIKey()
+            state.update(state: .Error("Failed to delete API Key from keychain"))
+        }
+    }
 
     func homeButton() -> some View {
         Button {() -> () in
@@ -67,54 +69,9 @@ struct AppMenu: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                 Text("An error occured")
             }
-            textArea(b: .constant(s))
+            textArea(.constant(s))
             Divider()
             homeButton()
-            Spacer()
-        }
-    }
-
-    func initPage() -> some View{
-        VStack{
-            Spacer()
-            menuStyle{
-                Text("API Key")
-                    .foregroundStyle(.black.opacity(0.5))
-                    .bold()
-                    .font(.footnote)
-            }
-            Spacer()
-            menuStyle {
-                Button(
-                    role: .destructive,
-                    action: {() -> () in
-                        if deleteAPIKey() {
-                            syncAPIKey()
-                            state.update(state: .Init)
-                        }else{
-                            syncAPIKey()
-                            state.update(state: .Error("Failed to delete API Key from keychain"))
-                        }
-                    }, label: {Text("Delete API Key").foregroundStyle(.red)})
-            }
-            Divider()
-            menuStyle{
-                Text("Function")
-                    .foregroundStyle(.black.opacity(0.5))
-                    .font(.footnote)
-                    .bold()
-            }
-            Spacer()
-            menuStyle {
-                Button(action: {() -> () in state.update(state: .Ask)},label: {Text("Ask AI")})
-            }
-            menuStyle {
-                Button(action: {() -> () in state.update(state: .Refine)},label: {Text("Refine Text")})
-            }
-            Divider()
-            menuStyle {
-                quitButton()
-            }
             Spacer()
         }
     }
@@ -126,19 +83,16 @@ struct AppMenu: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                 Text("Setup DeepSeek api key:")
             }
-            textArea(b: $keyIn)
-            HStack{
-                quitButton()
-                Button(action: {() -> () in
-                    if saveAPIKey(key: keyIn) {
-                        syncAPIKey()
-                        state.update(state: .Init)
-                    } else {
-                        syncAPIKey()
-                        state.update(state: .Error("Failed to save API key to keychain."))
-                    }
-                }, label: { Text("Enter") })
-            }
+            textArea($keyIn)
+            Button{
+                if saveAPIKey(key: keyIn) {
+                    syncAPIKey()
+                    state.update(state: .Init)
+                } else {
+                    syncAPIKey()
+                    state.update(state: .Error("Failed to save API key to keychain."))
+                }
+            }label: { Text("Enter") }
             Spacer()
         }
     }
@@ -152,8 +106,8 @@ struct AppMenu: View {
         DispatchQueue.main.async{
             Task {
                 state.update(state: .Busy(askInput, ""))
-                await DeepSeekAPIHandler(state: state, stop: signal)
-                    .callDeepSeekAPI(apiKey: key, s: askInput, displayInput: askInput)
+                await APICall(state: state, stop: signal)
+                    .callAPI(apiKey: key, s: "Try to be brief.\n"+askInput, displayInput: askInput)
             }
         }
     }
@@ -167,8 +121,8 @@ struct AppMenu: View {
                     task.store(true, ordering: .relaxed)
                 }
                 currentTask = signal
-                await DeepSeekAPIHandler(state: state, stop: signal)
-                    .callDeepSeekAPI(apiKey: key, s: "Refine the following text and return only the result. " + refineInput, displayInput: refineInput)
+                await APICall(state: state, stop: signal)
+                    .callAPI(apiKey: key, s: "Refine the following text and return only the result. " + refineInput, displayInput: refineInput)
             }
         }
     }
@@ -177,7 +131,7 @@ struct AppMenu: View {
         VStack{
             Spacer()
             Text("Ask DeepSeek:")
-            textArea(b: $askInput)
+            textArea($askInput)
             Divider()
             HStack{
                 homeButton()
@@ -193,7 +147,7 @@ struct AppMenu: View {
         VStack{
             Spacer()
             Text("Text to refine")
-            textArea(b: $refineInput)
+            textArea($refineInput)
             Divider()
             HStack{
                 homeButton()
@@ -212,14 +166,14 @@ struct AppMenu: View {
                 Image(systemName: "checkmark.circle")
                 Text("Input posted")
             }
-            textArea(b: .constant(query))
+            textArea(.constant(query))
             HStack {
                 Image(systemName: "circle.fill")
                     .symbolEffect(.bounce, options:.repeating)
                     .font(.footnote)
                 Text("Answer generating")
             }
-            textArea(b: .constant(answer))
+            textArea(.constant(answer))
             Divider()
             Button{
                 if let signal = currentTask {
@@ -236,20 +190,20 @@ struct AppMenu: View {
 
     func resultPage(query:String, answer: String) -> some View {
         VStack {
-            Spacer()
+            Spacer().frame(maxHeight: 10)
             HStack {
                 Image(systemName: "checkmark.circle")
                 Text("Input posted")
             }
-            textArea(b: .constant(query))
+            textArea(.constant(query))
             HStack {
                 Image(systemName: "checkmark.circle")
                 Text("Answer generated")
             }
-            textArea(b: .constant(answer))
+            textArea(.constant(answer))
             Divider()
             homeButton()
-            Spacer()
+            Spacer().frame(maxHeight: 10)
         }
     }
 
@@ -286,6 +240,12 @@ struct AppMenu: View {
     }
 
     var body: some View {
+        let width: CGFloat = switch state.state {
+        case .Init:
+            200
+        case _:
+            400
+        }
         VStack{
             if let url = urlState.url {
                 let _ = DispatchQueue.main.async {
@@ -298,7 +258,7 @@ struct AppMenu: View {
                 case (_, .Error(let s)):
                     errorPage(s: s)
                 case (_, .Init):
-                    initPage()
+                    AppMenu(state: state, deleteAPIKeyAction: deleteAPIKeyAction, quit: quit)
                 case (.none, _):
                     readAPIKeyPage()
                 case (.some(let key), .Ask):
@@ -311,6 +271,6 @@ struct AppMenu: View {
                     resultPage(query: query, answer: answer)
                 }
             }
-        }
+        }.frame(width: width)
     }
 }
