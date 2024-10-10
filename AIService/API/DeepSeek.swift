@@ -66,14 +66,14 @@ struct APICall {
 
         for await event in dataTask.events() {
             if stop.load(ordering: .relaxed) {
-                state.update(state: .Result(displayInput, answer))
+                state.set(.Result(displayInput, answer))
                 return
             }
             switch event {
             case .open:
                 ()
             case .error(let error):
-                state.update(state: .Error("\(error)"))
+                state.set(.Error("\(error)"))
                 return
             case .message(let message):
                 if let data = message.data?.data(using: .utf8) {
@@ -81,14 +81,14 @@ struct APICall {
                         let data = try JSONDecoder().decode(ChatResponse.self, from: data)
                         let inc = data.choices.first?.delta.content ?? ""
                         answer.append(inc)
-                        state.update(state: .Busy(displayInput, answer))
+                        state.set(.Busy(displayInput, answer))
                     } catch {}
                 }
             case .closed:
-                state.update(state: .Result(displayInput, answer))
+                state.set(.Result(displayInput, answer))
                 return
             }
         }
-        state.update(state: .Result(displayInput, answer))
+        state.set(.Result(displayInput, answer))
     }
 }

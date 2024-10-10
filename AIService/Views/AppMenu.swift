@@ -8,34 +8,58 @@
 import SwiftUI
 
 struct AppMenu: View{
-
+    
     @ObservedObject var state : AppState
+    @Binding var apiKey : String?
 
-    var deleteAPIKeyAction: () -> ();
     var quit : () -> ();
+    var togglePanel: () -> ();
 
-    var body: some View {
-        VStack(spacing: 0){
-            AppMenuText(text: "API Key")
-            AppMenuButton(label: "Delete API Key", action: deleteAPIKeyAction)
-            Divider().padding([.top, .bottom], 5)
-                .padding([.trailing, .leading], 8)
-            AppMenuText(text: "Function")
-            AppMenuButton(label: "Ask AI") {
-                state.update(state: .Ask)
-            }
-            AppMenuButton(label: "Refine Text"){
-                state.update(state: .Refine)
-            }
-            Divider().padding([.top, .bottom], 5)
-                .padding([.trailing, .leading], 8)
-            AppMenuButton(label: "Quit"){
-                quit()
-            }
-        }.padding(5)
+    func deleteAPIKeyAction(){
+        if deleteAPIKey() {
+            syncAPIKey()
+            state.set(.Ask)
+        }else{
+            syncAPIKey()
+            state.set(.Error("Failed to delete API Key from keychain"))
+        }
     }
-}
 
-#Preview {
-    AppMenu(state: AppState(), deleteAPIKeyAction: {() -> () in ()}, quit: {() -> () in ()})
+    func syncAPIKey(){
+        apiKey = getAPIKey()
+        switch apiKey {
+        case .none:
+            ()
+        case .some(let key):
+            apiKey = key
+        }
+    }
+    
+    var body: some View {
+        Section("API Key"){
+            Button(role:.destructive, action: deleteAPIKeyAction, label: {Text("Delete API Key")})
+        }
+        
+        Section("Floating Panel"){
+            Button {
+                togglePanel()
+            }label: {Text("Toggle Panel")}
+                .keyboardShortcut("p", modifiers: .command)
+        }
+        Section("Function"){
+            Button {
+                state.set(.Ask)
+            }label: {Text("Ask AI")}
+                .keyboardShortcut("1", modifiers: .command)
+            Button{
+                state.set(.Refine)
+            }label: {Text("Refine Text")}
+                .keyboardShortcut("2", modifiers: .command)
+        }
+
+        Button{
+            quit()
+        }label: {Text("Quit")}
+            .keyboardShortcut("q", modifiers: .command)
+    }
 }

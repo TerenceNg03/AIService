@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		6E075AF72CB28EA7006048A8 /* EventSource in Frameworks */ = {isa = PBXBuildFile; productRef = 6E075AF62CB28EA7006048A8 /* EventSource */; };
 		6E075AFC2CB29DB5006048A8 /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = 6E075AFB2CB29DB5006048A8 /* Atomics */; };
+		6EF7E7AF2CB800120051BD5C /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 6EF7E7AE2CB800120051BD5C /* KeyboardShortcuts */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 			files = (
 				6E075AF72CB28EA7006048A8 /* EventSource in Frameworks */,
 				6E075AFC2CB29DB5006048A8 /* Atomics in Frameworks */,
+				6EF7E7AF2CB800120051BD5C /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,6 +76,7 @@
 			packageProductDependencies = (
 				6E075AF62CB28EA7006048A8 /* EventSource */,
 				6E075AFB2CB29DB5006048A8 /* Atomics */,
+				6EF7E7AE2CB800120051BD5C /* KeyboardShortcuts */,
 			);
 			productName = AIService;
 			productReference = 6EF07CD62CAFFE8000C8C7EA /* AIService.app */;
@@ -106,6 +109,7 @@
 			packageReferences = (
 				6E075AF52CB28EA7006048A8 /* XCRemoteSwiftPackageReference "EventSource" */,
 				6E075AFA2CB29DB5006048A8 /* XCRemoteSwiftPackageReference "swift-atomics" */,
+				6EF7E7AD2CB800120051BD5C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6EF07CD72CAFFE8000C8C7EA /* Products */;
@@ -378,6 +382,14 @@
 				minimumVersion = 1.2.0;
 			};
 		};
+		6EF7E7AD2CB800120051BD5C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.2.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -390,6 +402,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 6E075AFA2CB29DB5006048A8 /* XCRemoteSwiftPackageReference "swift-atomics" */;
 			productName = Atomics;
+		};
+		6EF7E7AE2CB800120051BD5C /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6EF7E7AD2CB800120051BD5C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

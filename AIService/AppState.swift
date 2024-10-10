@@ -9,7 +9,6 @@
 import SwiftUI
 
 enum AppStateD {
-    case Init
     case Ask
     case Refine
     case Busy(String, String)
@@ -18,13 +17,12 @@ enum AppStateD {
 }
 
 @MainActor
-class AppState: ObservableObject {
+class AppState : ObservableObject {
+    @Published var v : AppStateD = .Ask
 
-    @Published var state: AppStateD = .Init;
-
-    func update(state: AppStateD) {
+    func set(_ v: AppStateD){
         DispatchQueue.main.async{
-            self.state = state
+            self.v = v
         }
     }
 }
