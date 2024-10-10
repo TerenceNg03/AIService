@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import TextEditorPlus
 
 struct FloatTextArea: View{
     var placeholder : String
