@@ -28,9 +28,21 @@ struct AIServiceApp: App {
     )
     @State var panelOpen = false
     @State var windowCreated = false
+    @State var shortcutInit = false
 
     func quit() {
         NSApplication.shared.terminate(self)
+    }
+
+    func initGlobalShortcut(){
+        if !shortcutInit {
+            KeyboardShortcuts.onKeyUp(for: .showFloatingPanel, action: {
+                togglePanel()
+            })
+            Task {
+                shortcutInit = true
+            }
+        }
     }
 
     func icon() -> String {
@@ -85,9 +97,8 @@ struct AIServiceApp: App {
     }
 
     var body: some Scene {
-        let _ = KeyboardShortcuts.onKeyUp(for: .showFloatingPanel, action: {
-            togglePanel()
-        })
+        let _ = initGlobalShortcut()
+
         MenuBarExtra(
             "AIService",
             systemImage: icon())
