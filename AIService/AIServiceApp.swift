@@ -66,7 +66,7 @@ struct AIServiceApp: App {
                         state: state,
                         urlState: urlState,
                         apiKey: $apiKey,
-                        quit: quit)
+                        quit: quit, openPanel: openPanel)
                     .background(.clear)
             )
             windowCreated = true
@@ -77,14 +77,18 @@ struct AIServiceApp: App {
     }
 
     func openPanel(){
-        initPanel()
-        panel.makeKeyAndOrderFront(nil)
-        panelOpen = true
+        if !panelOpen {
+            initPanel()
+            panel.makeKeyAndOrderFront(nil)
+            panelOpen = true
+        }
     }
 
     func closePanel(){
-        panel.orderOut(nil)
-        panelOpen = false
+        if panelOpen {
+            panel.orderOut(nil)
+            panelOpen = false
+        }
     }
 
     func togglePanel(){
@@ -106,7 +110,7 @@ struct AIServiceApp: App {
             AppMenu(state: state,
                     apiKey: $apiKey,
                     quit: quit,
-                    togglePanel: togglePanel)
+                    togglePanel: togglePanel, openPanel: openPanel)
         }
 
         Window("key", id: "key") {

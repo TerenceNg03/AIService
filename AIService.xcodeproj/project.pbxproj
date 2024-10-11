@@ -16,9 +16,22 @@
 		6EF07CD62CAFFE8000C8C7EA /* AIService.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AIService.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		6ED9889A2CB90F9E00766D73 /* Exceptions for "AIService" folder in "AIService" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 6EF07CD52CAFFE8000C8C7EA /* AIService */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6EF07CD82CAFFE8000C8C7EA /* AIService */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				6ED9889A2CB90F9E00766D73 /* Exceptions for "AIService" folder in "AIService" target */,
+			);
 			path = AIService;
 			sourceTree = "<group>";
 		};
@@ -287,7 +300,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "Terence-Ng.AIService";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -330,7 +343,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "Terence-Ng.AIService";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;

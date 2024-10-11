@@ -14,6 +14,7 @@ struct AppMenu: View{
 
     var quit : () -> ();
     var togglePanel: () -> ();
+    var openPanel: () -> ();
 
     func deleteAPIKeyAction(){
         if deleteAPIKey() {
@@ -49,10 +50,12 @@ struct AppMenu: View{
         Section("Function"){
             Button {
                 state.set(.Ask)
+                openPanel()
             }label: {Text("Ask AI")}
                 .keyboardShortcut("1", modifiers: .command)
             Button{
                 state.set(.Refine)
+                openPanel()
             }label: {Text("Refine Text")}
                 .keyboardShortcut("2", modifiers: .command)
         }

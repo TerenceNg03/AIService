@@ -17,6 +17,7 @@ struct ContentView: View {
     @Binding var apiKey : String?
 
     var quit : () -> ();
+    var openPanel : () -> ();
 
     func syncAPIKey(){
         apiKey = getAPIKey()
@@ -36,7 +37,7 @@ struct ContentView: View {
         }
         currentTask = signal
         state.set(.Busy(input, ""))
-        await APICall(state: state, stop: signal)
+            await APICall(state: state, stop: signal, openPanel: openPanel)
             .callAPI(apiKey: key, s: "Try to be brief.\n" + input, displayInput: input)
         }
     }
@@ -49,7 +50,7 @@ struct ContentView: View {
                 task.store(true, ordering: .relaxed)
             }
             currentTask = signal
-            await APICall(state: state, stop: signal)
+            await APICall(state: state, stop: signal, openPanel: openPanel)
                 .callAPI(apiKey: key, s: "Refine the following text and return only the result. " + input, displayInput: input)
         }
     }

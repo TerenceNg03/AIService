@@ -29,6 +29,7 @@ struct Delta: Codable {
 struct APICall {
     @ObservedObject var state : AppState
     var stop : ManagedAtomic<Bool>
+    var openPanel : () -> ();
 
     func toRequest(apiKey:String, s: String) -> URLRequest? {
         let url = URL(string: "https://api.deepseek.com/chat/completions")!
@@ -73,6 +74,7 @@ struct APICall {
             case .open:
                 ()
             case .error(let error):
+                openPanel()
                 state.set(.Error("\(error)"))
                 return
             case .message(let message):
@@ -81,14 +83,17 @@ struct APICall {
                         let data = try JSONDecoder().decode(ChatResponse.self, from: data)
                         let inc = data.choices.first?.delta.content ?? ""
                         answer.append(inc)
+                        openPanel()
                         state.set(.Busy(displayInput, answer))
                     } catch {}
                 }
             case .closed:
+                openPanel()
                 state.set(.Result(displayInput, answer))
                 return
             }
         }
+        openPanel()
         state.set(.Result(displayInput, answer))
     }
 }
