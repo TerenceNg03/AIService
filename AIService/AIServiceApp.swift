@@ -74,6 +74,7 @@ struct AIServiceApp: App {
         panel.setFrameOrigin(
             NSPoint(x: (panel.screen?.frame.width ?? 0) - panel.frame.width - 50,
                     y: (panel.screen?.frame.height ?? 0) - panel.frame.height - 50))
+
     }
 
     func openPanel(){
@@ -88,6 +89,7 @@ struct AIServiceApp: App {
         if panelOpen {
             panel.orderOut(nil)
             panelOpen = false
+            state.set(.Ask)
         }
     }
 

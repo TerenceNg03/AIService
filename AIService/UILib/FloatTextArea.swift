@@ -19,33 +19,37 @@ struct FloatTextArea: View{
     }
 
     var body : some View {
-        ZStack(alignment: .topLeading) {
-            if input.wrappedValue.isEmpty {
-                Text(placeholder)
-                    .font(.title3)
-                    .background(.clear)
-                    .foregroundColor(.black.opacity(0.7))
-                    .padding(.leading, 5)
-            }
-            TextEditor(text: input)
-                .font(.title3)
-                .onKeyPress{ press in
-                    if (press.key == KeyEquivalent.return && !press.modifiers.contains(EventModifiers.shift)) {
-                        action(input.wrappedValue)
-                        return .handled
-                    }
-                    return .ignored
+        ScrollView(.vertical, showsIndicators: false){
+            ZStack(alignment: .topLeading) {
+                if input.wrappedValue.isEmpty {
+                    Text(placeholder)
+                        .font(.title3)
+                        .background(.clear)
+                        .foregroundColor(.primary.opacity(0.7))
+                        .padding(.leading, 5)
                 }
-                .scrollContentBackground(.hidden)
+                TextEditor(text: input)
+                    .scrollDisabled(true)
+                    .font(.title3)
+                    .scrollContentBackground(.hidden)
+                    .background(.clear)
+                    .onKeyPress{ press in
+                        if (press.key == KeyEquivalent.return && !press.modifiers.contains(EventModifiers.shift)) {
+                            action(input.wrappedValue)
+                            return .handled
+                        }
+                        return .ignored
+                    }
+            }
         }
         .padding()
         .background(VisualEffectView())
-        .clipShape(RoundedRectangle(cornerRadius: 15))
-        .frame(maxHeight: 800)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .frame(maxHeight: 400)
         .fixedSize(horizontal: false, vertical: true)
     }
 }
 
 #Preview {
-    FloatTextArea("", text: .constant("Text"), action: {(_) in ()})
+    FloatTextArea("Placeholder", text: .constant(""), action: {(_) in ()})
 }

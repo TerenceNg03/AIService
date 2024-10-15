@@ -22,7 +22,7 @@ class FloatingPanel: NSPanel {
         self.level = .floating
 
         // Allow the pannel to appear in a fullscreen space
-        self.collectionBehavior.insert(.fullScreenAuxiliary)
+        self.collectionBehavior.insert([.fullScreenAuxiliary, .canJoinAllSpaces, .stationary])
 
         // While we may set a title for the window, don't show it
         self.titleVisibility = .hidden

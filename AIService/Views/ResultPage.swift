@@ -13,11 +13,12 @@ struct ResultPage : View {
     var body : some View {
         VStack{
             FloatTextArea("", text: .constant(query), action: {(_) in ()})
-            FloatTextArea("", text: .constant(answer), action: {(_) in ()})
+            Markdown(answer)
         }.background(.clear)
     }
 }
 
 #Preview {
-    ResultPage(query: .constant("Hello"), answer: .constant("Hello2"))
+    ResultPage(query: .constant("Hello"), answer: .constant("Strange things tend to happen when people are the most unprepared."))
+        .frame(maxWidth: 400)
 }
